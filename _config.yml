@@ -1,0 +1,3 @@
+include: ["contents"]
+plugins:
+  - jekyll-include-cache
