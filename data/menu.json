@@ -1,65 +1,99 @@
 {
-      "regions": {
-              "en": {
-                        "label": "English",
-                        "site_root": "/",
-                        "menu": [
-                                    {
-                                                  "label": "Home",
-                                                  "url": "/",
-                                                  "icon": "🏠"
-                                    },
-                                    {
-                                                  "label": "Reviews",
-                                                  "icon": "⭐",
-                                                  "children": [
-                                                                  {
-                                                                                    "label": "Beauty",
-                                                                                    "category": "beauty",
-                                                                                    "url": "/contents/regions/en/reviews/beauty/"
-                                                                  },
-                                                                  {
-                                                                                    "label": "Bedding",
-                                                                                    "category": "bedding",
-                                                                                    "url": "/contents/regions/en/reviews/bedding/"
-                                                                  },
-                                                                  {
-                                                                                    "label": "Audio",
-                                                                                    "category": "audio",
-                                                                                    "url": "/contents/regions/en/reviews/audio/"
-                                                                  },
-                                                                  {
-                                                                                    "label": "Fitness",
-                                                                                    "category": "fitness",
-                                                                                    "url": "/contents/regions/en/reviews/fitness/"
-                                                                  },
-                                                                  {
-                                                                                    "label": "Home & Garden",
-                                                                                    "category": "home",
-                                                                                    "url": "/contents/regions/en/reviews/home/"
-                                                                  },
-                                                                  {
-                                                                                    "label": "Kitchen",
-                                                                                    "category": "kitchen",
-                                                                                    "url": "/contents/regions/en/reviews/kitchen/"
-                                                                  },
-                                                                  {
-                                                                                    "label": "Tech",
-                                                                                    "category": "tech",
-                                                                                    "url": "/contents/regions/en/reviews/tech/"
-                                                                  }
-                                                  ]
-                                    },
-                                    {
-                                                  "label": "About",
-                                                  "url": "/about.html"
-                                    },
-                                    {
-                                                  "label": "Privacy Policy",
-                                                  "url": "/privacy-policy.html"
-                                    }
-                        ]
-              }
-      },
-      "defaultRegion": "en"
+  "languages": [
+    { "code": "en", "label": "English", "flag": "GB" },
+    { "code": "de", "label": "Deutsch", "flag": "DE" },
+    { "code": "es", "label": "Español", "flag": "ES" },
+    { "code": "fr", "label": "Français", "flag": "FR" }
+  ],
+  "defaultLanguage": "en",
+  "regions": {
+    "en": {
+      "label": "English",
+      "categories": {
+        "audio": {
+          "label": "Audio",
+          "icon": "🎧",
+          "pages": [
+            { "label": "Top Headphones 2026", "file": "top-headphones-2026.html" }
+          ]
+        },
+        "beauty": {
+          "label": "Beauty",
+          "icon": "💄",
+          "pages": [
+            { "label": "NIVEA Soft vs NIVEA Creme", "file": "nivea-soft-cream-500ml-vs-nivea-creme-tin-400ml.html" }
+          ]
+        },
+        "bedding": {
+          "label": "Bedding",
+          "icon": "🛏️",
+          "pages": [
+            { "label": "Bedding Comparison", "file": "product-1-vs-product-2.html" }
+          ]
+        },
+        "fitness": {
+          "label": "Fitness",
+          "icon": "💪",
+          "pages": []
+        },
+        "home": {
+          "label": "Home & Garden",
+          "icon": "🏡",
+          "pages": [
+            { "label": "Janhvi Kapoor Cosmetics", "file": "janhvi-kapoor-promoting-ren-e-cosmetics-fragrances.html" },
+            { "label": "Jennifer Lawrence Cosmetics", "file": "jennifer-lawrencepromoting-ren-e-cosmetics-fragran.html" },
+            { "label": "Home Products Comparison", "file": "product-1-vs-product-2.html" }
+          ]
+        },
+        "kitchen": {
+          "label": "Kitchen",
+          "icon": "🍳",
+          "pages": [
+            { "label": "Top Air Fryers 2026", "file": "top-air-fryers-2026.html" },
+            { "label": "Air Fryers Comparison V2", "file": "top-air-fryers-2026-v2.html" }
+          ]
+        },
+        "tech": {
+          "label": "Tech",
+          "icon": "💻",
+          "pages": []
+        }
+      }
+    },
+    "de": {
+      "label": "Deutsch",
+      "categories": {
+        "beauty": { "label": "Schönheit", "icon": "💄", "pages": [] },
+        "fitness": { "label": "Fitness", "icon": "💪", "pages": [] },
+        "home": { "label": "Haus & Garten", "icon": "🏡", "pages": [] },
+        "kitchen": { "label": "Küche", "icon": "🍳", "pages": [] },
+        "tech": { "label": "Technik", "icon": "💻", "pages": [] }
+      }
+    },
+    "es": {
+      "label": "Español",
+      "categories": {
+        "beauty": { "label": "Belleza", "icon": "💄", "pages": [] },
+        "fitness": { "label": "Fitness", "icon": "💪", "pages": [] },
+        "home": { "label": "Hogar y Jardín", "icon": "🏡", "pages": [] },
+        "kitchen": { "label": "Cocina", "icon": "🍳", "pages": [] },
+        "tech": { "label": "Tecnología", "icon": "💻", "pages": [] }
+      }
+    },
+    "fr": {
+      "label": "Français",
+      "categories": {
+        "beauty": { "label": "Beauté", "icon": "💄", "pages": [] },
+        "fitness": { "label": "Fitness", "icon": "💪", "pages": [] },
+        "home": { "label": "Maison & Jardin", "icon": "🏡", "pages": [] },
+        "kitchen": { "label": "Cuisine", "icon": "🍳", "pages": [] },
+        "tech": { "label": "Technologie", "icon": "💻", "pages": [] }
+      }
+    }
+  },
+  "staticMenu": [
+    { "label": "Home", "url": "/", "icon": "🏠" },
+    { "label": "About", "url": "/about.html" },
+    { "label": "Privacy Policy", "url": "/privacy-policy.html" }
+  ]
 }
