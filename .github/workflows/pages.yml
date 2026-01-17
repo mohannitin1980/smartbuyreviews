@@ -2,122 +2,102 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ["main"]
-  workflow_dispatch:
+      branches: ["main"]
+        workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+        permissions:
+          contents: read
+            pages: write
+              id-token: write
 
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+              concurrency:
+                group: "pages"
+                  cancel-in-progress: false
 
-jobs:
-  generate:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+                  jobs:
+                    generate:
+                        runs-on: ubuntu-latest
+                            steps:
+                                  - name: Checkout
+                                          uses: actions/checkout@v4
 
-      - name: Generate Category Index Files
-        run: |
-          node - <<'EOF'
-          const fs = require('fs');
-          const path = require('path');
-          
-          // Read generated-pages.json
-          const pagesData = JSON.parse(fs.readFileSync('generated-pages.json', 'utf8'));
-          
-          // Extract categories from URLs
-          const categories = {};
-          pagesData.pages.forEach(page => {
-            const match = page.loc.match(/\\/en\\/reviews\\/(\\w+)\\//);
-            if (match) {
-              const category = match[1];
-              if (!categories[category]) {
-                categories[category] = [];
-              }
-              categories[category].push({
-                url: page.loc,
-                title: page.loc.split('/').slice(-2, -1)[0].replace(/-/g, ' ')
-              });
-            }
-          });
-          
-          // Generate index.html for each category
-          Object.entries(categories).forEach(([category, pages]) => {
-            const indexPath = `contents/regions/en/reviews/${category}/index.html`;
-            const dir = path.dirname(indexPath);
-            
-            // Create directory if it doesn't exist
-            if (!fs.existsSync(dir)) {
-              fs.mkdirSync(dir, { recursive: true });
-            }
-            
-            // Generate HTML
-            const categoryTitle = category.charAt(0).toUpperCase() + category.slice(1);
-            const productLinks = pages.map(p => `
-              <div class="rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
-                <a href="${p.url.match(/\\/([^\\/]+)\\/$/)? p.url.match(/\\/([^\\/]+)\\/$/)[1] + '.html' : '#'}" class="block">
-                  <h3 class="font-semibold text-lg text-blue-600 hover:text-blue-800">${p.title}</h3>
-                  <p class="text-sm text-gray-600 mt-2">View detailed review →</p>
-                </a>
-              </div>
-            `).join('');
-            
-            const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${categoryTitle} Reviews - Smart Buy Reviews</title>
-    <link rel="stylesheet" href="/assets/styles.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50">
-    <div class="min-h-screen">
-        <nav class="bg-white border-b">
-            <div class="max-w-6xl mx-auto px-4 py-4">
-                <a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a>
-            </div>
-        </nav>
-        
-        <main class="max-w-6xl mx-auto px-4 py-12">
-            <div class="mb-8">
-                <h1 class="text-4xl font-bold text-gray-900 mb-2">${categoryTitle} Reviews</h1>
-                <p class="text-lg text-gray-600">Browse our comprehensive reviews of ${categoryTitle.toLowerCase()} products</p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                ${productLinks}
-            </div>
-        </main>
-    </div>
-</body>
-</html>`;
-            
-            fs.writeFileSync(indexPath, html);
-            console.log(`Generated: ${indexPath}`);
-          });
-          EOF
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: generate
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+                                                - name: Generate Category Index Files
+                                                        run: |
+                                                                  mkdir -p scripts
+                                                                            cat > scripts/generate-index.js << 'SCRIPT_EOF'
+                                                                                      const fs = require('fs');
+                                                                                                const path = require('path');
+                                                                                                          const pagesData = JSON.parse(fs.readFileSync('generated-pages.json', 'utf8'));
+                                                                                                                    const categories = {};
+                                                                                                                              pagesData.pages.forEach(page => {
+                                                                                                                                          const match = page.loc.match(/\/en\/reviews\/(\w+)\//);
+                                                                                                                                                      if (match) {
+                                                                                                                                                                    const category = match[1];
+                                                                                                                                                                                  if (!categories[category]) {
+                                                                                                                                                                                                  categories[category] = [];
+                                                                                                                                                                                                                }
+                                                                                                                                                                                                                              categories[category].push({url: page.loc});
+                                                                                                                                                                                                                                          }
+                                                                                                                                                                                                                                                    });
+                                                                                                                                                                                                                                                              Object.entries(categories).forEach(([category, pages]) => {
+                                                                                                                                                                                                                                                                          const indexPath = `contents/regions/en/reviews/${category}/index.html`;
+                                                                                                                                                                                                                                                                                      const dir = path.dirname(indexPath);
+                                                                                                                                                                                                                                                                                                  if (!fs.existsSync(dir)) {
+                                                                                                                                                                                                                                                                                                                fs.mkdirSync(dir, { recursive: true });
+                                                                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                                                                                        const categoryTitle = category.charAt(0).toUpperCase() + category.slice(1);
+                                                                                                                                                                                                                                                                                                                                                    const productLinks = pages.map((p, idx) => `
+                                                                                                                                                                                                                                                                                                                                                                  <div class="rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                                                                                                                                                                                                                                                                                                                                                                                  <a href="./product-${idx}.html" class="block">
+                                                                                                                                                                                                                                                                                                                                                                                                    <h3 class="font-semibold text-lg text-blue-600 hover:text-blue-800">Product ${idx + 1}</h3>
+                                                                                                                                                                                                                                                                                                                                                                                                                      <p class="text-sm text-gray-600 mt-2">View detailed review →</p>
+                                                                                                                                                                                                                                                                                                                                                                                                                                      </a>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                    </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                `).join('');
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                            const html = `<!DOCTYPE html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <html lang="en">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <head>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                <meta charset="UTF-8">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <title>${categoryTitle} Reviews - Smart Buy Reviews</title>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <script src="https://cdn.tailwindcss.com"><\/script>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </head>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <body class="bg-gray-50">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                <nav class="bg-white border-b">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <div class="max-w-6xl mx-auto px-4 py-4">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </nav>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <main class="max-w-6xl mx-auto px-4 py-12">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <h1 class="text-4xl font-bold text-gray-900 mb-2">${categoryTitle} Reviews</h1>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <p class="text-lg text-gray-600">Browse our comprehensive reviews of ${categoryTitle.toLowerCase()} products</p>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ${productLinks}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </main>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </body>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </html>`;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                fs.writeFileSync(indexPath, html);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            console.log(`Generated: ${indexPath}`);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      });
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                SCRIPT_EOF
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          node scripts/generate-index.js
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                - name: Setup Pages
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        uses: actions/configure-pages@v4
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              - name: Upload artifact
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      uses: actions/upload-pages-artifact@v3
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              with:
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        path: '.'
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          deploy:
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              environment:
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    name: github-pages
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          url: ${{ steps.deployment.outputs.page_url }}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              runs-on: ubuntu-latest
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  needs: generate
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      steps:
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            - name: Deploy to GitHub Pages
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    id: deployment
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            uses: actions/deploy-pages@v4
