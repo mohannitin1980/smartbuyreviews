@@ -1,96 +1,165 @@
 name: Deploy to GitHub Pages
 on:
   push:
-      branches:
-            - main
-              workflow_dispatch:
+    branches:
+      - main
+  workflow_dispatch:
 
-              permissions:
-                contents: read
-                  pages: write
-                    id-token: write
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
-                    concurrency:
-                      group: pages
-                        cancel-in-progress: false
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
-                        jobs:
-                          deploy:
-                              environment:
-                                    name: github-pages
-                                          url: ${{ steps.deployment.outputs.page_url }}
-                                              runs-on: ubuntu-latest
-                                                  steps:
-                                                        - name: Checkout
-                                                                uses: actions/checkout@v4
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-                                                                      - name: Create index.html files
-                                                                              run: |
-                                                                                        mkdir -p contents/regions/en/reviews/audio
-                                                                                                  mkdir -p contents/regions/en/reviews/beauty
-                                                                                                            mkdir -p contents/regions/en/reviews/fitness
-                                                                                                                      mkdir -p contents/regions/en/reviews/home
-                                                                                                                                mkdir -p contents/regions/en/reviews/kitchen
-                                                                                                                                          mkdir -p contents/regions/en/reviews/tech
-                                                                                                                                                    mkdir -p contents/regions/en/reviews/test
-                                                                                                                                                              mkdir -p contents/regions/en/reviews/Bedding
-                                                                                                                                                              
-                                                                                                                                                                    - name: Create Audio Index
-                                                                                                                                                                            run: |
-                                                                                                                                                                                      cat > contents/regions/en/reviews/audio/index.html << 'EOF'
-                                                                                                                                                                                                <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Audio Reviews</title><script src="https://cdn.tailwindcss.com"></script></head><body><nav class="bg-white border-b"><div class="max-w-6xl mx-auto px-4 py-4"><a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a></div></nav><main class="max-w-6xl mx-auto px-4 py-12"><h1 class="text-4xl font-bold">Audio Reviews</h1><p class="text-lg text-gray-600">Browse our audio product reviews</p></main></body></html>
-                                                                                                                                                                                                          EOF
-                                                                                                                                                                                                          
-                                                                                                                                                                                                                - name: Create Beauty Index
-                                                                                                                                                                                                                        run: |
-                                                                                                                                                                                                                                  cat > contents/regions/en/reviews/beauty/index.html << 'EOF'
-                                                                                                                                                                                                                                            <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Beauty Reviews</title><script src="https://cdn.tailwindcss.com"></script></head><body><nav class="bg-white border-b"><div class="max-w-6xl mx-auto px-4 py-4"><a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a></div></nav><main class="max-w-6xl mx-auto px-4 py-12"><h1 class="text-4xl font-bold">Beauty Reviews</h1><p class="text-lg text-gray-600">Browse our beauty product reviews</p></main></body></html>
-                                                                                                                                                                                                                                                      EOF
-                                                                                                                                                                                                                                                      
-                                                                                                                                                                                                                                                            - name: Create Fitness Index
-                                                                                                                                                                                                                                                                    run: |
-                                                                                                                                                                                                                                                                              cat > contents/regions/en/reviews/fitness/index.html << 'EOF'
-                                                                                                                                                                                                                                                                                        <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Fitness Reviews</title><script src="https://cdn.tailwindcss.com"></script></head><body><nav class="bg-white border-b"><div class="max-w-6xl mx-auto px-4 py-4"><a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a></div></nav><main class="max-w-6xl mx-auto px-4 py-12"><h1 class="text-4xl font-bold">Fitness Reviews</h1><p class="text-lg text-gray-600">Browse our fitness product reviews</p></main></body></html>
-                                                                                                                                                                                                                                                                                                  EOF
-                                                                                                                                                                                                                                                                                                  
-                                                                                                                                                                                                                                                                                                        - name: Create Home Index
-                                                                                                                                                                                                                                                                                                                run: |
-                                                                                                                                                                                                                                                                                                                          cat > contents/regions/en/reviews/home/index.html << 'EOF'
-                                                                                                                                                                                                                                                                                                                                    <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Home Reviews</title><script src="https://cdn.tailwindcss.com"></script></head><body><nav class="bg-white border-b"><div class="max-w-6xl mx-auto px-4 py-4"><a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a></div></nav><main class="max-w-6xl mx-auto px-4 py-12"><h1 class="text-4xl font-bold">Home Reviews</h1><p class="text-lg text-gray-600">Browse our home product reviews</p></main></body></html>
-                                                                                                                                                                                                                                                                                                                                              EOF
-                                                                                                                                                                                                                                                                                                                                              
-                                                                                                                                                                                                                                                                                                                                                    - name: Create Kitchen Index
-                                                                                                                                                                                                                                                                                                                                                            run: |
-                                                                                                                                                                                                                                                                                                                                                                      cat > contents/regions/en/reviews/kitchen/index.html << 'EOF'
-                                                                                                                                                                                                                                                                                                                                                                                <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Kitchen Reviews</title><script src="https://cdn.tailwindcss.com"></script></head><body><nav class="bg-white border-b"><div class="max-w-6xl mx-auto px-4 py-4"><a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a></div></nav><main class="max-w-6xl mx-auto px-4 py-12"><h1 class="text-4xl font-bold">Kitchen Reviews</h1><p class="text-lg text-gray-600">Browse our kitchen product reviews</p></main></body></html>
-                                                                                                                                                                                                                                                                                                                                                                                          EOF
-                                                                                                                                                                                                                                                                                                                                                                                          
-                                                                                                                                                                                                                                                                                                                                                                                                - name: Create Tech Index
-                                                                                                                                                                                                                                                                                                                                                                                                        run: |
-                                                                                                                                                                                                                                                                                                                                                                                                                  cat > contents/regions/en/reviews/tech/index.html << 'EOF'
-                                                                                                                                                                                                                                                                                                                                                                                                                            <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Tech Reviews</title><script src="https://cdn.tailwindcss.com"></script></head><body><nav class="bg-white border-b"><div class="max-w-6xl mx-auto px-4 py-4"><a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a></div></nav><main class="max-w-6xl mx-auto px-4 py-12"><h1 class="text-4xl font-bold">Tech Reviews</h1><p class="text-lg text-gray-600">Browse our tech product reviews</p></main></body></html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                      EOF
-                                                                                                                                                                                                                                                                                                                                                                                                                                      
-                                                                                                                                                                                                                                                                                                                                                                                                                                            - name: Create Test Index
-                                                                                                                                                                                                                                                                                                                                                                                                                                                    run: |
-                                                                                                                                                                                                                                                                                                                                                                                                                                                              cat > contents/regions/en/reviews/test/index.html << 'EOF'
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Test Reviews</title><script src="https://cdn.tailwindcss.com"></script></head><body><nav class="bg-white border-b"><div class="max-w-6xl mx-auto px-4 py-4"><a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a></div></nav><main class="max-w-6xl mx-auto px-4 py-12"><h1 class="text-4xl font-bold">Test Reviews</h1><p class="text-lg text-gray-600">Browse our test product reviews</p></main></body></html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  EOF
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        - name: Create Bedding Index
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                run: |
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          cat > contents/regions/en/reviews/Bedding/index.html << 'EOF'
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bedding Reviews</title><script src="https://cdn.tailwindcss.com"></script></head><body><nav class="bg-white border-b"><div class="max-w-6xl mx-auto px-4 py-4"><a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a></div></nav><main class="max-w-6xl mx-auto px-4 py-12"><h1 class="text-4xl font-bold">Bedding Reviews</h1><p class="text-lg text-gray-600">Browse our bedding product reviews</p></main></body></html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              EOF
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    - name: Setup Pages
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            uses: actions/configure-pages@v4
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  - name: Upload artifact
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          uses: actions/upload-pages-artifact@v3
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  with:
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            path: .
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  - name: Deploy to GitHub Pages
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          id: deployment
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  uses: actions/deploy-pages@v4
+      - name: Create Audio Index
+        run: mkdir -p contents/regions/en/reviews/audio && cat > contents/regions/en/reviews/audio/index.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Audio Reviews</title>
+<script src="https://cdn.tailwindcss.com"><\\/script>
+</head>
+<body class="bg-gray-50">
+<nav class="bg-white border-b"><div class="max-w-6xl mx-auto px-4 py-4"><a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a></div></nav>
+<main class="max-w-6xl mx-auto px-4 py-12"><h1 class="text-4xl font-bold text-gray-900">Audio Reviews</h1><p class="text-lg text-gray-600">Browse our audio product reviews</p></main>
+</body>
+</html>
+EOF
+
+      - name: Create Beauty Index
+        run: mkdir -p contents/regions/en/reviews/beauty && cat > contents/regions/en/reviews/beauty/index.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Beauty Reviews</title>
+<script src="https://cdn.tailwindcss.com"><\\/script>
+</head>
+<body class="bg-gray-50">
+<nav class="bg-white border-b"><div class="max-w-6xl mx-auto px-4 py-4"><a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a></div></nav>
+<main class="max-w-6xl mx-auto px-4 py-12"><h1 class="text-4xl font-bold text-gray-900">Beauty Reviews</h1><p class="text-lg text-gray-600">Browse our beauty product reviews</p></main>
+</body>
+</html>
+EOF
+
+      - name: Create Fitness Index
+        run: mkdir -p contents/regions/en/reviews/fitness && cat > contents/regions/en/reviews/fitness/index.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Fitness Reviews</title>
+<script src="https://cdn.tailwindcss.com"><\\/script>
+</head>
+<body class="bg-gray-50">
+<nav class="bg-white border-b"><div class="max-w-6xl mx-auto px-4 py-4"><a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a></div></nav>
+<main class="max-w-6xl mx-auto px-4 py-12"><h1 class="text-4xl font-bold text-gray-900">Fitness Reviews</h1><p class="text-lg text-gray-600">Browse our fitness product reviews</p></main>
+</body>
+</html>
+EOF
+
+      - name: Create Home Index
+        run: mkdir -p contents/regions/en/reviews/home && cat > contents/regions/en/reviews/home/index.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Home Reviews</title>
+<script src="https://cdn.tailwindcss.com"><\\/script>
+</head>
+<body class="bg-gray-50">
+<nav class="bg-white border-b"><div class="max-w-6xl mx-auto px-4 py-4"><a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a></div></nav>
+<main class="max-w-6xl mx-auto px-4 py-12"><h1 class="text-4xl font-bold text-gray-900">Home Reviews</h1><p class="text-lg text-gray-600">Browse our home product reviews</p></main>
+</body>
+</html>
+EOF
+
+      - name: Create Kitchen Index
+        run: mkdir -p contents/regions/en/reviews/kitchen && cat > contents/regions/en/reviews/kitchen/index.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Kitchen Reviews</title>
+<script src="https://cdn.tailwindcss.com"><\\/script>
+</head>
+<body class="bg-gray-50">
+<nav class="bg-white border-b"><div class="max-w-6xl mx-auto px-4 py-4"><a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a></div></nav>
+<main class="max-w-6xl mx-auto px-4 py-12"><h1 class="text-4xl font-bold text-gray-900">Kitchen Reviews</h1><p class="text-lg text-gray-600">Browse our kitchen product reviews</p></main>
+</body>
+</html>
+EOF
+
+      - name: Create Tech Index
+        run: mkdir -p contents/regions/en/reviews/tech && cat > contents/regions/en/reviews/tech/index.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Tech Reviews</title>
+<script src="https://cdn.tailwindcss.com"><\\/script>
+</head>
+<body class="bg-gray-50">
+<nav class="bg-white border-b"><div class="max-w-6xl mx-auto px-4 py-4"><a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a></div></nav>
+<main class="max-w-6xl mx-auto px-4 py-12"><h1 class="text-4xl font-bold text-gray-900">Tech Reviews</h1><p class="text-lg text-gray-600">Browse our tech product reviews</p></main>
+</body>
+</html>
+EOF
+
+      - name: Create Test Index
+        run: mkdir -p contents/regions/en/reviews/test && cat > contents/regions/en/reviews/test/index.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Test Reviews</title>
+<script src="https://cdn.tailwindcss.com"><\\/script>
+</head>
+<body class="bg-gray-50">
+<nav class="bg-white border-b"><div class="max-w-6xl mx-auto px-4 py-4"><a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a></div></nav>
+<main class="max-w-6xl mx-auto px-4 py-12"><h1 class="text-4xl font-bold text-gray-900">Test Reviews</h1><p class="text-lg text-gray-600">Browse our test product reviews</p></main>
+</body>
+</html>
+EOF
+
+      - name: Create Bedding Index
+        run: mkdir -p contents/regions/en/reviews/Bedding && cat > contents/regions/en/reviews/Bedding/index.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Bedding Reviews</title>
+<script src="https://cdn.tailwindcss.com"><\\/script>
+</head>
+<body class="bg-gray-50">
+<nav class="bg-white border-b"><div class="max-w-6xl mx-auto px-4 py-4"><a href="/" class="text-xl font-bold text-blue-600">Smart Buy Reviews</a></div></nav>
+<main class="max-w-6xl mx-auto px-4 py-12"><h1 class="text-4xl font-bold text-gray-900">Bedding Reviews</h1><p class="text-lg text-gray-600">Browse our bedding product reviews</p></main>
+</body>
+</html>
+EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
