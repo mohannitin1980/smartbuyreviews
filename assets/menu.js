@@ -1,152 +1,142 @@
 /**
  * Smart Navigation Menu System
- * Works at any folder depth - calculates relative paths automatically
+ * Works at any folder depth - detects region/language from URL and filters menu accordingly
  */
 class SmartNavigationMenu {
-  constructor(options = {}) {
-    this.menuSelector = options.menuSelector || 'nav';
-    this.menuDataUrl = options.menuDataUrl || '/data/menu.json';
-    this.currentPagePath = this.getCurrentPagePath();
-    this.siteRoot = options.siteRoot || '/';
-    this.init();
-  }
+    constructor(options = {}) {
+          this.menuSelector = options.menuSelector || 'nav';
+          this.menuDataUrl = options.menuDataUrl || '/data/menu.json';
+          this.currentPagePath = this.getCurrentPagePath();
+          this.detectedRegion = this.detectRegionFromPath();
+          this.siteRoot = options.siteRoot || '/';
+          this.init();
+    }
 
   getCurrentPagePath() {
-    const path = window.location.pathname;
-    const pathWithoutFile = path.substring(0, path.lastIndexOf('/') + 1);
-    return pathWithoutFile === '/' ? '/' : pathWithoutFile;
+        const path = window.location.pathname;
+        const pathWithoutFile = path.substring(0, path.lastIndexOf('/') + 1);
+        return pathWithoutFile === '' ? '/' : pathWithoutFile;
+  }
+
+  detectRegionFromPath() {
+        const path = window.location.pathname;
+        // Match pattern: /contents/regions/{region}/...
+      const regionMatch = path.match(/\/contents\/regions\/([a-z]{2})\//);
+        return regionMatch ? regionMatch[1] : null;
   }
 
   getDepthLevel() {
-    const path = this.getCurrentPagePath();
-    if (path === '/') return 0;
-    const count = (path.match(/\\//g) || []).length - 1;
-    return count;
+        const path = this.getCurrentPagePath();
+        if (path === '/') return 0;
+        const count = (path.match(/\//g) || []).length - 1;
+        return count;
   }
 
   toRelativeUrl(absoluteUrl) {
-    if (absoluteUrl.startsWith('#') || absoluteUrl.startsWith('http')) {
-      return absoluteUrl;
-    }
-
-    const depth = this.getDepthLevel();
-    if (depth === 0) {
-      return absoluteUrl;
-    }
-
-    const prefix = '../'.repeat(depth);
-    const urlWithoutSlash = absoluteUrl.startsWith('/') 
-      ? absoluteUrl.substring(1) 
-      : absoluteUrl;
-
-    return prefix + urlWithoutSlash;
+        if (absoluteUrl.startsWith('http')) {
+                return absoluteUrl;
+        }
+        if (absoluteUrl.startsWith('/')) {
+                const depth = this.getDepthLevel();
+                if (depth === 0) return absoluteUrl;
+                return '../'.repeat(depth) + absoluteUrl.substring(1);
+        }
+        return absoluteUrl;
   }
 
-  async init() {
-    try {
-      const response = await fetch(this.menuDataUrl);
-      const data = await response.json();
-      this.renderMenu(data.menu);
-    } catch (error) {
-      console.error('Failed to load menu:', error);
-      this.createFallbackMenu();
-    }
+  init() {
+        this.loadMenuData();
   }
 
-  renderMenu(menuItems) {
-    const nav = document.querySelector(this.menuSelector);
-    if (!nav) return;
+  loadMenuData() {
+        fetch(this.menuDataUrl)
+          .then(response => response.json())
+          .then(data => {
+                    this.menuData = data;
+                    this.renderMenu();
+          })
+          .catch(error => {
+                    console.warn('Failed to load menu data, using fallback menu');
+                    this.renderFallbackMenu();
+          });
+  }
 
-    const ul = document.createElement('ul');
-    ul.className = 'flex flex-col md:flex-row gap-0 md:gap-6';
+  renderMenu() {
+        const navElement = document.querySelector(this.menuSelector);
+        if (!navElement) return;
 
-    menuItems.forEach(item => {
-      const li = this.createMenuItem(item);
-      ul.appendChild(li);
-    });
+      // Determine which region to use
+      const region = this.detectedRegion || this.menuData.defaultRegion || 'en';
+        const regionData = this.menuData.regions[region];
 
-    nav.innerHTML = '';
-    nav.appendChild(ul);
+      if (!regionData) {
+              this.renderFallbackMenu();
+              return;
+      }
+
+      const menuHtml = this.createMenuHtml(regionData.menu);
+        navElement.innerHTML = menuHtml;
+  }
+
+  createMenuHtml(menuItems) {
+        let html = '<ul class="menu-list">';
+
+      menuItems.forEach(item => {
+              if (item.children && item.children.length > 0) {
+                        // Create dropdown menu
+                html += this.createMenuItemWithDropdown(item);
+              } else {
+                        // Regular menu item
+                html += this.createMenuItem(item);
+              }
+      });
+
+      html += '</ul>';
+        return html;
   }
 
   createMenuItem(item) {
-    const li = document.createElement('li');
-    
-    if (item.children && item.children.length > 0) {
-      li.className = 'relative group';
-      
-      const link = document.createElement('a');
-      link.href = '#';
-      link.className = 'block px-4 py-2 text-slate-900 hover:bg-slate-100 cursor-pointer font-medium';
-      link.textContent = `${item.icon ? item.icon + ' ' : ''}${item.label}`;
-      link.style.userSelect = 'none';
-      
-      link.addEventListener('click', (e) => e.preventDefault());
-      
-      const dropdown = document.createElement('ul');
-      dropdown.className = 'hidden group-hover:block absolute left-0 top-full mt-0 bg-white border border-slate-200 rounded shadow-lg z-50 w-56';
-      
-      item.children.forEach(child => {
-        const childLi = document.createElement('li');
-        const childLink = document.createElement('a');
-        
-        const relativeUrl = this.toRelativeUrl(child.url);
-        
-        childLink.href = relativeUrl;
-        childLink.className = 'block px-4 py-2 text-slate-900 hover:bg-slate-100 text-sm';
-        childLink.textContent = child.label;
-        
-        childLi.appendChild(childLink);
-        dropdown.appendChild(childLi);
-      });
-      
-      li.appendChild(link);
-      li.appendChild(dropdown);
-    } else {
-      const link = document.createElement('a');
-      const relativeUrl = this.toRelativeUrl(item.url);
-      
-      link.href = relativeUrl;
-      link.className = 'block px-4 py-2 text-slate-900 hover:bg-slate-100 font-medium';
-      link.textContent = `${item.icon ? item.icon + ' ' : ''}${item.label}`;
-      
-      li.appendChild(link);
-    }
-    
-    return li;
+        const url = this.toRelativeUrl(item.url);
+        const icon = item.icon ? item.icon + ' ' : '';
+        return `<li class="menu-item"><a href="${url}" class="menu-link">${icon}${item.label}</a></li>`;
   }
 
-  createFallbackMenu() {
-    const nav = document.querySelector(this.menuSelector);
-    if (!nav) return;
+  createMenuItemWithDropdown(item) {
+        const icon = item.icon ? item.icon + ' ' : '';
+        let html = `<li class="menu-item menu-item--with-children">
+                          <span class="menu-link menu-link--parent">${icon}${item.label}</span>
+                                            <ul class="menu-submenu">`;
 
-    const fallbackMenu = [
-      { label: 'Home', url: this.toRelativeUrl('/') },
-      { label: 'About', url: this.toRelativeUrl('/about.html') },
-      { label: 'Privacy', url: this.toRelativeUrl('/privacy-policy.html') }
-    ];
+      item.children.forEach(child => {
+              const url = this.toRelativeUrl(child.url);
+              html += `<li class="menu-submenu-item"><a href="${url}" class="menu-submenu-link">${child.label}</a></li>`;
+      });
 
-    const ul = document.createElement('ul');
-    ul.className = 'flex gap-4';
+      html += `</ul>
+                   </li>`;
+        return html;
+  }
 
-    fallbackMenu.forEach(item => {
-      const li = document.createElement('li');
-      const link = document.createElement('a');
-      link.href = item.url;
-      link.className = 'text-slate-900 hover:text-blue-600';
-      link.textContent = item.label;
-      li.appendChild(link);
-      ul.appendChild(li);
-    });
+  renderFallbackMenu() {
+        const navElement = document.querySelector(this.menuSelector);
+        if (!navElement) return;
 
-    nav.appendChild(ul);
+      const fallbackHtml = `
+            <ul class="menu-list">
+                    <li class="menu-item"><a href="/" class="menu-link">🏠 HOME</a></li>
+                            <li class="menu-item"><a href="/about.html" class="menu-link">ABOUT</a></li>
+                                    <li class="menu-item"><a href="/privacy-policy.html" class="menu-link">PRIVACY POLICY</a></li>
+                                          </ul>
+                                              `;
+        navElement.innerHTML = fallbackHtml;
   }
 }
 
+// Initialize the menu when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    new SmartNavigationMenu();
-  });
+    document.addEventListener('DOMContentLoaded', () => {
+          new SmartNavigationMenu();
+    });
 } else {
-  new SmartNavigationMenu();
+    new SmartNavigationMenu();
 }
