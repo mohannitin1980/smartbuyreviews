@@ -1,7 +1,8 @@
 /**
- * Smart Navigation Menu v3.1
+ * Smart Navigation Menu v3.2
  * Simple flat menu with Reviews dropdown and language switching
  * URL structure: /regions/{lang}/reviews/{file}.html
+ * Fixed: dropdown stays open when moving mouse to submenu
  */
 class SmartNavigationMenu {
   constructor(options = {}) {
@@ -9,6 +10,7 @@ class SmartNavigationMenu {
     this.menuDataUrl = options.menuDataUrl || '/data/menu.json';
     this.menuData = null;
     this.currentLang = this.detectLanguage();
+    this.closeTimeout = null;
     this.init();
   }
 
@@ -68,21 +70,22 @@ class SmartNavigationMenu {
 
     // Reviews dropdown (only if there are reviews)
     if (reviews.length > 0) {
-      html += `<li class="menu-item menu-item--with-children relative">
-        <button class="menu-link menu-link--parent text-white hover:text-slate-200 transition-colors flex items-center gap-1">
+      html += `<li class="menu-item menu-item--with-children relative group">
+        <button class="menu-link menu-link--parent text-white hover:text-slate-200 transition-colors flex items-center gap-1 py-2">
           Reviews
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
         </button>
-        <ul class="menu-submenu absolute top-full left-0 mt-2 bg-slate-800 rounded-lg shadow-xl py-2 min-w-[250px] hidden z-50">`;
+        <div class="menu-submenu-wrapper absolute top-full left-0 pt-1 hidden z-50">
+          <ul class="menu-submenu bg-slate-800 rounded-lg shadow-xl py-2 min-w-[280px]">`;
 
       for (const review of reviews) {
         const localizedUrl = this.getLocalizedUrl(review.url);
         html += `<li class="menu-submenu-item">
-          <a href="${localizedUrl}" class="menu-submenu-link block px-4 py-2 text-slate-200 hover:bg-slate-700 hover:text-white transition-colors">${review.label}</a>
+          <a href="${localizedUrl}" class="menu-submenu-link block px-4 py-2 text-slate-200 hover:bg-slate-700 hover:text-white transition-colors text-sm">${review.label}</a>
         </li>`;
       }
 
-      html += '</ul></li>';
+      html += '</ul></div></li>';
     }
 
     // About link
@@ -103,22 +106,23 @@ class SmartNavigationMenu {
   buildLanguageDropdown(languages) {
     const currentLangData = languages.find(l => l.code === this.currentLang) || languages[0];
 
-    let html = `<li class="menu-item menu-item--with-children relative ml-4">
+    let html = `<li class="menu-item menu-item--with-children relative group ml-4">
       <button class="menu-link menu-link--parent text-white hover:text-slate-200 transition-colors flex items-center gap-1 border border-white/20 rounded px-3 py-1">
         <span class="text-sm">${currentLangData.flag} ${currentLangData.code.toUpperCase()}</span>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
       </button>
-      <ul class="menu-submenu absolute top-full right-0 mt-2 bg-slate-800 rounded-lg shadow-xl py-2 min-w-[140px] hidden z-50">`;
+      <div class="menu-submenu-wrapper absolute top-full right-0 pt-1 hidden z-50">
+        <ul class="menu-submenu bg-slate-800 rounded-lg shadow-xl py-2 min-w-[140px]">`;
 
     for (const lang of languages) {
       const isActive = lang.code === this.currentLang;
       const activeClass = isActive ? ' bg-slate-700' : '';
       html += `<li class="menu-submenu-item">
-        <a href="#" class="menu-submenu-link block px-4 py-2 text-slate-200 hover:bg-slate-700 hover:text-white transition-colors${activeClass}" data-lang="${lang.code}">${lang.flag} ${lang.label}</a>
+        <a href="#" class="menu-submenu-link block px-4 py-2 text-slate-200 hover:bg-slate-700 hover:text-white transition-colors text-sm${activeClass}" data-lang="${lang.code}">${lang.flag} ${lang.label}</a>
       </li>`;
     }
 
-    html += '</ul></li>';
+    html += '</ul></div></li>';
     return html;
   }
 
@@ -133,31 +137,58 @@ class SmartNavigationMenu {
   }
 
   attachEventListeners() {
-    // Dropdown toggle on click
+    const self = this;
+
     document.querySelectorAll('.menu-item--with-children').forEach(item => {
       const button = item.querySelector('.menu-link--parent');
-      const submenu = item.querySelector('.menu-submenu');
+      const submenuWrapper = item.querySelector('.menu-submenu-wrapper');
 
-      if (button && submenu) {
-        button.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
+      if (!button || !submenuWrapper) return;
 
-          // Close other open menus
-          document.querySelectorAll('.menu-submenu').forEach(sm => {
-            if (sm !== submenu) sm.classList.add('hidden');
-          });
-
-          submenu.classList.toggle('hidden');
+      // Show on hover (desktop)
+      item.addEventListener('mouseenter', () => {
+        if (self.closeTimeout) {
+          clearTimeout(self.closeTimeout);
+          self.closeTimeout = null;
+        }
+        // Close other menus
+        document.querySelectorAll('.menu-submenu-wrapper').forEach(sw => {
+          if (sw !== submenuWrapper) sw.classList.add('hidden');
         });
-      }
+        submenuWrapper.classList.remove('hidden');
+      });
+
+      // Hide on mouse leave with small delay
+      item.addEventListener('mouseleave', () => {
+        self.closeTimeout = setTimeout(() => {
+          submenuWrapper.classList.add('hidden');
+        }, 150);
+      });
+
+      // Also support click for mobile/touch
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const isHidden = submenuWrapper.classList.contains('hidden');
+
+        // Close all other menus
+        document.querySelectorAll('.menu-submenu-wrapper').forEach(sw => {
+          sw.classList.add('hidden');
+        });
+
+        // Toggle this one
+        if (isHidden) {
+          submenuWrapper.classList.remove('hidden');
+        }
+      });
     });
 
     // Close dropdowns when clicking outside
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.menu-item--with-children')) {
-        document.querySelectorAll('.menu-submenu').forEach(sm => {
-          sm.classList.add('hidden');
+        document.querySelectorAll('.menu-submenu-wrapper').forEach(sw => {
+          sw.classList.add('hidden');
         });
       }
     });
