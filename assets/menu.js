@@ -1,8 +1,8 @@
 /**
- * Smart Navigation Menu v3.2
+ * Smart Navigation Menu v3.3
  * Simple flat menu with Reviews dropdown and language switching
  * URL structure: /regions/{lang}/reviews/{file}.html
- * Fixed: dropdown stays open when moving mouse to submenu
+ * Fixed: dropdown stays open longer when moving mouse to submenu
  */
 class SmartNavigationMenu {
   constructor(options = {}) {
@@ -158,11 +158,11 @@ class SmartNavigationMenu {
         submenuWrapper.classList.remove('hidden');
       });
 
-      // Hide on mouse leave with small delay
+      // Hide on mouse leave with longer delay for easier selection
       item.addEventListener('mouseleave', () => {
         self.closeTimeout = setTimeout(() => {
           submenuWrapper.classList.add('hidden');
-        }, 150);
+        }, 400);
       });
 
       // Also support click for mobile/touch
