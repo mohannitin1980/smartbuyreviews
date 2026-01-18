@@ -1,20 +1,13 @@
 /**
- * Smart Navigation Menu System v2.0
- * Supports language switching and 3-level menus (Reviews > Category > Pages)
+ * Smart Navigation Menu - Simplified v3.0
+ * Simple flat menu with Reviews dropdown listing all review pages
  */
 class SmartNavigationMenu {
   constructor(options = {}) {
     this.menuContainerId = options.menuContainerId || 'dynamic-menu';
     this.menuDataUrl = options.menuDataUrl || '/data/menu.json';
-    this.currentLanguage = this.detectLanguageFromPath() || 'en';
     this.menuData = null;
     this.init();
-  }
-
-  detectLanguageFromPath() {
-    const path = window.location.pathname;
-    const langMatch = path.match(/\/contents\/regions\/([a-z]{2})\//);
-    return langMatch ? langMatch[1] : null;
   }
 
   init() {
@@ -26,7 +19,6 @@ class SmartNavigationMenu {
       .then(response => response.json())
       .then(data => {
         this.menuData = data;
-        this.currentLanguage = this.detectLanguageFromPath() || data.defaultLanguage || 'en';
         this.renderMenu();
       })
       .catch(error => {
@@ -37,111 +29,66 @@ class SmartNavigationMenu {
 
   renderMenu() {
     const container = document.getElementById(this.menuContainerId);
-    if (!container) {
-      // If no container found, try to inject into nav
-      this.injectMenuIntoNav();
-      return;
-    }
+    if (!container) return;
     container.innerHTML = this.buildMenuHtml();
     this.attachEventListeners();
   }
 
-  injectMenuIntoNav() {
-    const nav = document.querySelector('nav');
-    if (!nav) return;
-
-    // Check if there's already a menu wrapper
-    let menuWrapper = nav.querySelector('.menu-wrapper');
-    if (!menuWrapper) {
-      // Create wrapper and move existing content
-      const existingContent = nav.innerHTML;
-      menuWrapper = document.createElement('div');
-      menuWrapper.className = 'menu-wrapper';
-      menuWrapper.id = this.menuContainerId;
-      nav.innerHTML = '';
-      nav.appendChild(menuWrapper);
-    }
-
-    menuWrapper.innerHTML = this.buildMenuHtml();
-    this.attachEventListeners();
-  }
-
   buildMenuHtml() {
-    const regionData = this.menuData.regions[this.currentLanguage];
-    if (!regionData) return this.buildFallbackHtml();
+    if (!this.menuData) return this.buildFallbackHtml();
 
-    let html = '<ul class="menu-list">';
+    const reviews = this.menuData.reviews || [];
+    const languages = this.menuData.languages || [];
+
+    let html = '<ul class="menu-list flex flex-wrap items-center gap-4 lg:gap-6">';
 
     // Home link
-    html += '<li class="menu-item"><a href="/" class="menu-link">🏠 Home</a></li>';
+    html += '<li class="menu-item"><a href="/" class="menu-link text-white hover:text-slate-200 transition-colors">Home</a></li>';
 
-    // Reviews mega menu with categories and pages
-    html += this.buildReviewsMenu(regionData);
+    // Reviews dropdown (only if there are reviews)
+    if (reviews.length > 0) {
+      html += `<li class="menu-item menu-item--with-children relative">
+        <button class="menu-link menu-link--parent text-white hover:text-slate-200 transition-colors flex items-center gap-1">
+          Reviews
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <ul class="menu-submenu absolute top-full left-0 mt-2 bg-slate-800 rounded-lg shadow-xl py-2 min-w-[250px] hidden z-50">`;
+
+      for (const review of reviews) {
+        html += `<li class="menu-submenu-item">
+          <a href="${review.url}" class="menu-submenu-link block px-4 py-2 text-slate-200 hover:bg-slate-700 hover:text-white transition-colors">${review.label}</a>
+        </li>`;
+      }
+
+      html += '</ul></li>';
+    }
 
     // About link
-    html += '<li class="menu-item"><a href="/about.html" class="menu-link">About</a></li>';
+    html += '<li class="menu-item"><a href="/about.html" class="menu-link text-white hover:text-slate-200 transition-colors">About</a></li>';
 
-    // Language dropdown
-    html += this.buildLanguageDropdown();
+    // Privacy Policy link
+    html += '<li class="menu-item"><a href="/privacy-policy.html" class="menu-link text-white hover:text-slate-200 transition-colors">Privacy Policy</a></li>';
+
+    // Language dropdown (if multiple languages)
+    if (languages.length > 1) {
+      html += this.buildLanguageDropdown(languages);
+    }
 
     html += '</ul>';
     return html;
   }
 
-  buildReviewsMenu(regionData) {
-    const categories = regionData.categories;
-    if (!categories || Object.keys(categories).length === 0) {
-      return '';
-    }
-
-    let html = `<li class="menu-item menu-item--with-children">
-      <span class="menu-link menu-link--parent">⭐ Reviews</span>
-      <ul class="menu-submenu">`;
-
-    for (const [catKey, catData] of Object.entries(categories)) {
-      const catUrl = `/contents/regions/${this.currentLanguage}/reviews/${catKey}/`;
-
-      if (catData.pages && catData.pages.length > 0) {
-        // Category with pages - create sub-submenu
-        html += `<li class="menu-submenu-item menu-submenu-item--with-children">
-          <span class="menu-submenu-link menu-submenu-link--parent">${catData.icon || ''} ${catData.label}</span>
-          <ul class="menu-subsubmenu">`;
-
-        for (const page of catData.pages) {
-          const pageUrl = `${catUrl}${page.file}`;
-          html += `<li class="menu-subsubmenu-item">
-            <a href="${pageUrl}" class="menu-subsubmenu-link">${page.label}</a>
-          </li>`;
-        }
-
-        html += `</ul></li>`;
-      } else {
-        // Category without pages - just show category link
-        html += `<li class="menu-submenu-item">
-          <a href="${catUrl}" class="menu-submenu-link">${catData.icon || ''} ${catData.label}</a>
-        </li>`;
-      }
-    }
-
-    html += '</ul></li>';
-    return html;
-  }
-
-  buildLanguageDropdown() {
-    const languages = this.menuData.languages;
-    if (!languages || languages.length <= 1) return '';
-
-    const currentLangData = languages.find(l => l.code === this.currentLanguage) || languages[0];
-
-    let html = `<li class="menu-item menu-item--with-children menu-item--language">
-      <span class="menu-link menu-link--parent">🌐 ${currentLangData.label}</span>
-      <ul class="menu-submenu menu-submenu--language">`;
+  buildLanguageDropdown(languages) {
+    let html = `<li class="menu-item menu-item--with-children relative ml-4">
+      <button class="menu-link menu-link--parent text-white hover:text-slate-200 transition-colors flex items-center gap-1 border border-white/20 rounded px-3 py-1">
+        <span class="text-sm">EN</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+      </button>
+      <ul class="menu-submenu absolute top-full right-0 mt-2 bg-slate-800 rounded-lg shadow-xl py-2 min-w-[140px] hidden z-50">`;
 
     for (const lang of languages) {
-      const isActive = lang.code === this.currentLanguage;
-      const activeClass = isActive ? ' menu-submenu-link--active' : '';
       html += `<li class="menu-submenu-item">
-        <a href="#" class="menu-submenu-link${activeClass}" data-lang="${lang.code}">${lang.label}</a>
+        <a href="#" class="menu-submenu-link block px-4 py-2 text-slate-200 hover:bg-slate-700 hover:text-white transition-colors" data-lang="${lang.code}">${lang.flag} ${lang.label}</a>
       </li>`;
     }
 
@@ -151,67 +98,54 @@ class SmartNavigationMenu {
 
   buildFallbackHtml() {
     return `
-      <ul class="menu-list">
-        <li class="menu-item"><a href="/" class="menu-link">🏠 Home</a></li>
-        <li class="menu-item"><a href="/about.html" class="menu-link">About</a></li>
-        <li class="menu-item"><a href="/privacy-policy.html" class="menu-link">Privacy Policy</a></li>
+      <ul class="menu-list flex flex-wrap items-center gap-4 lg:gap-6">
+        <li class="menu-item"><a href="/" class="menu-link text-white hover:text-slate-200">Home</a></li>
+        <li class="menu-item"><a href="/about.html" class="menu-link text-white hover:text-slate-200">About</a></li>
+        <li class="menu-item"><a href="/privacy-policy.html" class="menu-link text-white hover:text-slate-200">Privacy Policy</a></li>
       </ul>
     `;
   }
 
   attachEventListeners() {
+    // Dropdown toggle on click
+    document.querySelectorAll('.menu-item--with-children').forEach(item => {
+      const button = item.querySelector('.menu-link--parent');
+      const submenu = item.querySelector('.menu-submenu');
+
+      if (button && submenu) {
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          // Close other open menus
+          document.querySelectorAll('.menu-submenu').forEach(sm => {
+            if (sm !== submenu) sm.classList.add('hidden');
+          });
+
+          submenu.classList.toggle('hidden');
+        });
+      }
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.menu-item--with-children')) {
+        document.querySelectorAll('.menu-submenu').forEach(sm => {
+          sm.classList.add('hidden');
+        });
+      }
+    });
+
     // Language switching
     document.querySelectorAll('[data-lang]').forEach(el => {
       el.addEventListener('click', (e) => {
         e.preventDefault();
         const newLang = e.target.dataset.lang;
-        this.switchLanguage(newLang);
+        localStorage.setItem('preferredLanguage', newLang);
+        // For now just show an alert - full language support would need more pages
+        alert(`Language preference saved: ${newLang}. Full multilingual support coming soon!`);
       });
     });
-
-    // Touch support for mobile
-    document.querySelectorAll('.menu-item--with-children').forEach(item => {
-      item.addEventListener('click', (e) => {
-        if (window.innerWidth <= 768) {
-          const submenu = item.querySelector('.menu-submenu');
-          if (submenu) {
-            e.stopPropagation();
-            item.classList.toggle('menu-item--open');
-          }
-        }
-      });
-    });
-
-    // Sub-submenu touch support
-    document.querySelectorAll('.menu-submenu-item--with-children').forEach(item => {
-      item.addEventListener('click', (e) => {
-        if (window.innerWidth <= 768) {
-          const submenu = item.querySelector('.menu-subsubmenu');
-          if (submenu) {
-            e.stopPropagation();
-            item.classList.toggle('menu-submenu-item--open');
-          }
-        }
-      });
-    });
-  }
-
-  switchLanguage(newLang) {
-    const currentPath = window.location.pathname;
-
-    // If we're on a region-specific page, switch the language in the path
-    if (currentPath.includes('/contents/regions/')) {
-      const newPath = currentPath.replace(
-        /\/contents\/regions\/[a-z]{2}\//,
-        `/contents/regions/${newLang}/`
-      );
-      window.location.href = newPath;
-    } else {
-      // Store preference and reload
-      localStorage.setItem('preferredLanguage', newLang);
-      this.currentLanguage = newLang;
-      this.renderMenu();
-    }
   }
 
   renderFallbackMenu() {
